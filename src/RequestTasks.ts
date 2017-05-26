@@ -14,9 +14,9 @@ export interface URLConfig {
   }
 }
 
-export async function performRequest<T> (client: Client, config: AxiosRequestConfig) : Promise<T> {
-  const options : AxiosRequestConfig = {
-    validateStatus (status) {
+export async function performRequest<T>(client: Client, config: AxiosRequestConfig): Promise<T> {
+  const options: AxiosRequestConfig = {
+    validateStatus(status) {
       return status === 200
     },
     ...config
@@ -43,29 +43,32 @@ export async function performRequest<T> (client: Client, config: AxiosRequestCon
   }
 }
 
-export function performAPIRequest<T> (client: Client, url: URLConfig | any[], axiosConfig?: AxiosRequestConfig): Promise<APIResponse<T>> {
+export function performAPIRequest<T>(client: Client, url: URLConfig | any[], axiosConfig?: AxiosRequestConfig): Promise<APIResponse<T>> {
   const apiBase = client.mashape_key != null ? MASHAPE_BASE_PATH : API_BASE_PATH
   if (Array.isArray(url)) {
     url.unshift(apiBase)
   } else {
     url.path.unshift(apiBase)
   }
-  const options : AxiosRequestConfig = {
+  const options: AxiosRequestConfig = {
     url: joinURL(url),
-    headers: { },
+    headers: {},
     ...axiosConfig
   }
-  const bearer = client.access_token || client.client_id
-  if (bearer != null) {
-    options.headers.Authorization = `Bearer ${bearer}`
+
+  if (client.access_token) {
+    options.headers.Authorization = `Bearer ${client.access_token}`;
+  } else if (client.client_id) {
+    options.headers.Authorization = `Client-ID ${client.client_id}`;
   }
+
   if (client.mashape_key != null) {
     options.headers['X-Mashape-Key'] = client.mashape_key
   }
   return performRequest(client, options)
 }
 
-export function joinURL (urlToJoin: URLConfig | string[]) : string {
+export function joinURL(urlToJoin: URLConfig | string[]): string {
   if (Array.isArray(urlToJoin)) {
     return join(...urlToJoin)
   }
